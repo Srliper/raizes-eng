@@ -1,0 +1,220 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum CanalAtendimento {
+  APP
+  TOTEM
+  BALCAO
+  PICKUP
+}
+
+enum StatusPedidoMulticanal {
+  PENDING_PAYMENT
+  PAID
+  PAYMENT_FAILED
+  PREPARING
+  READY_FOR_PICKUP
+  CANCELLED
+}
+
+enum StatusTransacaoPagamento {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum CanalColetaConsentimento {
+  APP
+  TOTEM
+  BALCAO
+  WEB
+}
+
+model Cliente {
+  id                    String   @id @default(uuid())
+  nomeSocial            String?
+  cpfHash               String   @unique
+  emailMascarado        String?
+  telefoneMascarado     String?
+  versaoTermoConsentimento String?
+  consentimentoAtivo    Boolean  @default(false)
+  anonimizado           Boolean  @default(false)
+  criadoEm              DateTime @default(now())
+  atualizadoEm          DateTime @updatedAt
+
+  pedidos               PedidoMulticanal[]
+  consentimentos        ConsentimentoLGPD[]
+  saldoFidelizacao      SaldoFidelizacao?
+  movimentosFidelizacao MovimentoFidelizacao[]
+
+  @@map("clientes")
+}
+
+model UnidadeFranqueada {
+  id           String   @id @default(uuid())
+  nome         String
+  regiao       String
+  aberta       Boolean  @default(true)
+  horarioJson  Json?
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  pedidos      PedidoMulticanal[]
+  catalogo     UnidadeProduto[]
+
+  @@map("unidades_franqueadas")
+}
+
+model Produto {
+  id            String   @id @default(uuid())
+  nome          String
+  descricao     String
+  precoBase     Decimal  @db.Decimal(10, 2)
+  tagsRegionais String[]
+  sazonal       Boolean  @default(false)
+  ativo         Boolean  @default(true)
+  criadoEm      DateTime @default(now())
+  atualizadoEm  DateTime @updatedAt
+
+  unidades      UnidadeProduto[]
+  itensPedido   ItemDoPedido[]
+
+  @@map("produtos")
+}
+
+model UnidadeProduto {
+  id           String   @id @default(uuid())
+  unidadeId    String
+  produtoId    String
+  precoRegional Decimal @db.Decimal(10, 2)
+  disponivel   Boolean  @default(true)
+  estoque      Int      @default(0)
+
+  unidade      UnidadeFranqueada @relation(fields: [unidadeId], references: [id])
+  produto      Produto           @relation(fields: [produtoId], references: [id])
+
+  @@unique([unidadeId, produtoId])
+  @@index([unidadeId])
+  @@map("unidade_produto")
+}
+
+model PedidoMulticanal {
+  id              String               @id @default(uuid())
+  publicOrderId   String               @unique @default(uuid())
+  clienteId       String?
+  unidadeId       String
+  canal           CanalAtendimento
+  status          StatusPedidoMulticanal @default(PENDING_PAYMENT)
+  valorTotal      Decimal              @db.Decimal(10, 2)
+  idempotencyKey  String               @unique
+  correlationId   String
+  criadoEm        DateTime             @default(now())
+  atualizadoEm    DateTime             @updatedAt
+
+  cliente         Cliente?             @relation(fields: [clienteId], references: [id])
+  unidade         UnidadeFranqueada    @relation(fields: [unidadeId], references: [id])
+  itens           ItemDoPedido[]
+  transacao       TransacaoPagamento?
+
+  @@index([unidadeId, canal])
+  @@index([clienteId])
+  @@index([criadoEm])
+  @@map("pedidos_multicanal")
+}
+
+model ItemDoPedido {
+  id              String   @id @default(uuid())
+  pedidoId        String
+  produtoId       String
+  quantidade      Int
+  precoUnitario   Decimal  @db.Decimal(10, 2)
+  observacoes     String?
+
+  pedido          PedidoMulticanal @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
+  produto         Produto          @relation(fields: [produtoId], references: [id])
+
+  @@map("itens_do_pedido")
+}
+
+model TransacaoPagamento {
+  id              String                 @id @default(uuid())
+  pedidoId        String                 @unique
+  gatewayRef      String                 @unique @default(uuid())
+  status          StatusTransacaoPagamento @default(PENDING)
+  valorProcessado Decimal                @db.Decimal(10, 2)
+  webhookRecebidoEm DateTime?
+  criadoEm        DateTime               @default(now())
+  atualizadoEm    DateTime               @updatedAt
+
+  pedido          PedidoMulticanal       @relation(fields: [pedidoId], references: [id])
+
+  @@index([gatewayRef])
+  @@map("transacoes_pagamento")
+}
+
+model ConsentimentoLGPD {
+  id           String                   @id @default(uuid())
+  clienteId    String
+  versaoTermo  String
+  aceito       Boolean
+  canal        CanalColetaConsentimento
+  finalidades  String[]
+  registradoEm DateTime                 @default(now())
+
+  cliente      Cliente                  @relation(fields: [clienteId], references: [id])
+
+  @@index([clienteId, versaoTermo])
+  @@map("consentimentos_lgpd")
+}
+
+model SaldoFidelizacao {
+  id        String   @id @default(uuid())
+  clienteId String   @unique
+  pontos    Int      @default(0)
+  atualizadoEm DateTime @updatedAt
+
+  cliente   Cliente  @relation(fields: [clienteId], references: [id])
+
+  @@map("saldos_fidelizacao")
+}
+
+model MovimentoFidelizacao {
+  id           String   @id @default(uuid())
+  clienteId    String
+  tipo         String
+  pontos       Int
+  multiplicador Decimal @db.Decimal(5, 2)
+  expiraEm     DateTime
+  motivo       String?
+  criadoEm     DateTime @default(now())
+
+  cliente      Cliente  @relation(fields: [clienteId], references: [id])
+
+  @@index([clienteId, expiraEm])
+  @@map("movimentos_fidelizacao")
+}
+
+model LogAuditoria {
+  id            String   @id @default(uuid())
+  correlationId String
+  severidade    String
+  autorId       String?
+  autorTipo     String
+  operacao      String
+  recurso       String
+  recursoId     String?
+  ipOrigem      String?
+  payloadResumo Json?
+  lgpdMetadados Json?
+  criadoEm      DateTime @default(now())
+
+  @@index([correlationId])
+  @@index([criadoEm])
+  @@map("logs_auditoria")
+}
