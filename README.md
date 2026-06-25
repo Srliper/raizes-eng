@@ -1,6 +1,6 @@
 # Raízes do Nordeste — Backend API
 
-API REST multicanal para a rede franqueada **Raízes do Nordeste**, desenvolvida como Projeto Multidisciplinar — Trilha Engenharia de Software.
+API REST multicanal para a rede franqueada **Raízes do Nordeste**, desenvolvida como Projeto Multidisciplinar da disciplina **Engenharia de Software** (855885), do curso **Análise e Desenvolvimento de Sistemas** — **UNINTER**, UTA Desenvolvimento Avançado, Fase II 2026.
 
 **Aluno:** Luís Fernando Bedim — RA 4555952
 
@@ -52,12 +52,12 @@ npx tsx prisma/seed.ts
 npm run dev
 ```
 
-Servidor disponível em `http://localhost:3000`.
+Servidor disponível em `http://localhost:3210`.
 
 ## Exemplo — criar pedido
 
 ```bash
-curl -X POST http://localhost:3000/api/v1/orders \
+curl -X POST http://localhost:3210/api/v1/orders \
   -H "Content-Type: application/json" \
   -H "idempotency-key: pedido-demo-001" \
   -H "x-correlation-id: corr-demo-001" \
@@ -71,7 +71,35 @@ curl -X POST http://localhost:3000/api/v1/orders \
   }'
 ```
 
-## Testes
+## Testes no Postman / Insomnia
+
+### Collection pronta
+
+Importe o arquivo: `tests/raizes-nordeste.postman_collection.json`
+
+Variável `baseUrl` padrão: `http://localhost:3210`
+
+### Ordem sugerida de testes
+
+1. `GET /health`
+2. `GET /api/v1/dev/endpoints` — lista rotas e IDs do seed
+3. `GET /api/v1/catalog/{unidadeId}`
+4. `GET /api/v1/orders/RN-20260617-001`
+5. `POST /api/v1/privacy/consent`
+6. `POST /api/v1/dev/token` — gera JWT para rotas protegidas
+7. `POST /api/v1/orders` — header `idempotency-key` obrigatório
+8. `GET /api/v1/dev/webhook-assinatura` — gera HMAC
+9. `POST /api/v1/payments/webhook`
+10. `DELETE /api/v1/users/{clientId}/anonymize` — header `Authorization: Bearer {token}`
+
+### Seeds do banco
+
+```bash
+npx tsx prisma/seed.ts
+npx tsx prisma/seed-complementar.ts
+```
+
+### Testes automatizados
 
 ```bash
 npm test           # todos os testes + cobertura
@@ -114,6 +142,8 @@ raizes-backend/
 └── README.md
 ```
 
-## Licença
+## Licença e contexto acadêmico
 
-MIT — Projeto acadêmico UNIP / Engenharia de Software.
+**Código-fonte:** licença [MIT](https://opensource.org/licenses/MIT) — permite uso, cópia e modificação com atribuição ao autor.
+
+**Contexto acadêmico:** projeto desenvolvido na **UNINTER**, curso **Análise e Desenvolvimento de Sistemas**, disciplina **Engenharia de Software** — aluno Luís Fernando Bedim (RA 4555952).

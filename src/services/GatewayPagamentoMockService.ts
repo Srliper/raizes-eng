@@ -82,4 +82,28 @@ export class GatewayPagamentoMockService {
   validarAssinatura(referenciaGateway: string, situacao: string, assinatura: string): boolean {
     return this.compilarHashIntegridade(referenciaGateway, situacao) === assinatura;
   }
+
+  /**
+   * CT09 — simula gateway que não responde a tempo: nenhum webhook é disparado
+   * e o pedido permanece em PENDING_PAYMENT para validar retry/backoff.
+   */
+  agendarTimeoutSemWebhook(parametros: {
+    gatewayRef: string;
+    timeoutMs: number;
+    correlationId: string;
+  }): void {
+    setTimeout(() => {
+      registrarLogEstruturado({
+        correlationId: parametros.correlationId,
+        severidade: 'WARN',
+        mensagem: 'Gateway mock expirou sem responder — timeout simulado (CT09)',
+        operacao: 'MOCK_PAYMENT_TIMEOUT',
+        payload: {
+          gatewayRef: parametros.gatewayRef,
+          timeoutMs: parametros.timeoutMs,
+          webhookEnviado: false,
+        },
+      });
+    }, parametros.timeoutMs);
+  }
 }

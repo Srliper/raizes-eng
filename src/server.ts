@@ -1,7 +1,10 @@
+import dotenv from 'dotenv';
 import { Server } from 'http';
 import { app } from './app';
 import { prismaCliente } from './config/prisma';
 import { obterRedisCliente } from './config/redis';
+
+dotenv.config();
 
 const PORTA = Number(process.env.PORT) || 3000;
 const HOST = process.env.PUBLIC_HOST ?? 'localhost';

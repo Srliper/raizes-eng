@@ -1,0 +1,192 @@
+{
+  "info": {
+    "name": "Raízes do Nordeste API",
+    "description": "Collection para testes no Postman/Insomnia — backend multicanal",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3210" },
+    { "key": "unidadeId", "value": "00000000-0000-4000-8000-000000000001" },
+    { "key": "clienteId", "value": "00000000-0000-4000-8000-000000000100" },
+    { "key": "produtoId", "value": "00000000-0000-4000-8000-000000000010" },
+    { "key": "publicOrderId", "value": "RN-20260617-001" },
+    { "key": "gatewayRef", "value": "mock-gateway-20260617-001" },
+    { "key": "jwtToken", "value": "" },
+    { "key": "webhookAssinatura", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Saúde",
+      "item": [
+        {
+          "name": "GET /health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/health"
+          }
+        },
+        {
+          "name": "GET /ready",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/ready"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Desenvolvimento",
+      "item": [
+        {
+          "name": "POST /dev/token (gerar JWT)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.token) pm.collectionVariables.set('jwtToken', json.token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"clienteId\": \"{{clienteId}}\"\n}"
+            },
+            "url": "{{baseUrl}}/api/v1/dev/token"
+          }
+        },
+        {
+          "name": "GET /dev/webhook-assinatura",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.assinatura) pm.collectionVariables.set('webhookAssinatura', json.assinatura);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/dev/webhook-assinatura?gatewayRef={{gatewayRef}}&status=APPROVED",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "dev", "webhook-assinatura"],
+              "query": [
+                { "key": "gatewayRef", "value": "{{gatewayRef}}" },
+                { "key": "status", "value": "APPROVED" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Catálogo",
+      "item": [
+        {
+          "name": "GET /catalog/:unitId",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "x-correlation-id", "value": "postman-catalogo-001" }
+            ],
+            "url": "{{baseUrl}}/api/v1/catalog/{{unidadeId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Pedidos",
+      "item": [
+        {
+          "name": "POST /orders (criar pedido)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "idempotency-key", "value": "postman-pedido-{{$timestamp}}" },
+              { "key": "x-correlation-id", "value": "postman-pedido-001" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"unidadeId\": \"{{unidadeId}}\",\n  \"canal\": \"APP\",\n  \"clienteId\": \"{{clienteId}}\",\n  \"itens\": [\n    {\n      \"produtoId\": \"{{produtoId}}\",\n      \"quantidade\": 2\n    },\n    {\n      \"produtoId\": \"00000000-0000-4000-8000-000000000011\",\n      \"quantidade\": 1\n    }\n  ]\n}"
+            },
+            "url": "{{baseUrl}}/api/v1/orders"
+          }
+        },
+        {
+          "name": "GET /orders/:orderId",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "x-correlation-id", "value": "postman-consulta-001" }
+            ],
+            "url": "{{baseUrl}}/api/v1/orders/{{publicOrderId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Pagamentos",
+      "item": [
+        {
+          "name": "POST /payments/webhook",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-correlation-id", "value": "postman-webhook-001" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"gatewayRef\": \"{{gatewayRef}}\",\n  \"status\": \"APPROVED\",\n  \"assinatura\": \"{{webhookAssinatura}}\"\n}"
+            },
+            "url": "{{baseUrl}}/api/v1/payments/webhook"
+          }
+        }
+      ]
+    },
+    {
+      "name": "LGPD / Privacidade",
+      "item": [
+        {
+          "name": "POST /privacy/consent",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-correlation-id", "value": "postman-lgpd-001" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"clienteId\": \"{{clienteId}}\",\n  \"versaoTermo\": \"v2.1-2024-Nordeste\",\n  \"aceito\": true,\n  \"canal\": \"APP\",\n  \"finalidades\": [\"pedidos\", \"fidelizacao\"]\n}"
+            },
+            "url": "{{baseUrl}}/api/v1/privacy/consent"
+          }
+        },
+        {
+          "name": "DELETE /users/:clientId/anonymize",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{jwtToken}}" },
+              { "key": "x-correlation-id", "value": "postman-anonimizar-001" }
+            ],
+            "url": "{{baseUrl}}/api/v1/users/{{clienteId}}/anonymize"
+          }
+        }
+      ]
+    }
+  ]
+}

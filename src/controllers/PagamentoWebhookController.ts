@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { ProcessarWebhookPagamentoService } from '../services/ProcessarWebhookPagamentoService';
 
 const webhookSchema = z.object({
-  gatewayRef: z.string().uuid(),
+  gatewayRef: z.string().min(1),
   status: z.enum(['APPROVED', 'REJECTED']),
   assinatura: z.string().min(1),
 });

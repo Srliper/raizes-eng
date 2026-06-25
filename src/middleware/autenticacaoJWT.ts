@@ -13,17 +13,21 @@ export function middlewareAutenticacaoJWT(
   _resposta: Response,
   proximo: NextFunction,
 ): void {
-  const cabecalho = requisicao.headers.authorization;
-  if (!cabecalho?.startsWith('Bearer ')) {
-    throw new AppError('Token de autenticação ausente', 401);
-  }
-
-  const token = cabecalho.slice(7);
   try {
+    const cabecalho = requisicao.headers.authorization;
+    if (!cabecalho?.startsWith('Bearer ')) {
+      throw new AppError('Token de autenticação ausente', 401);
+    }
+
+    const token = cabecalho.slice(7);
     const decodificado = jwt.verify(token, configuracaoAmbiente.jwt.secret) as TokenPayload;
     requisicao.usuarioAutenticado = { id: decodificado.sub, role: decodificado.role };
     proximo();
-  } catch {
-    throw new AppError('Token de autenticação inválido ou expirado', 401);
+  } catch (erro) {
+    if (erro instanceof AppError) {
+      proximo(erro);
+      return;
+    }
+    proximo(new AppError('Token de autenticação inválido ou expirado', 401));
   }
 }

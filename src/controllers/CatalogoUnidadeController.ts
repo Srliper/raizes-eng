@@ -1,4 +1,4 @@
-/*  import { Request, Response, NextFunction } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { ConsultarCatalogoUnidadeService } from '../services/ConsultarCatalogoUnidadeService';
 
 export class CatalogoUnidadeController {
@@ -6,7 +6,7 @@ export class CatalogoUnidadeController {
     private readonly catalogoService = new ConsultarCatalogoUnidadeService(),
   ) {}
 
-  consultar = async (
+  consultarCatalogo = async (
     requisicao: Request,
     resposta: Response,
     proximo: NextFunction,
@@ -16,45 +16,13 @@ export class CatalogoUnidadeController {
         requisicao.params.unitId,
         requisicao.correlationId,
       );
-      resposta.status(200).json(catalogo);
-    } catch (erro) {
-      proximo(erro);
-    }
-  };
-}
-*/
-import { Request, Response, NextFunction } from 'express';
 
-export class CatalogoUnidadeController {
-  async consultarCatalogo(
-    requisicao: Request,
-    resposta: Response,
-    proximo: NextFunction,
-  ): Promise<void> {
-    try {
-      const { unitId } = requisicao.params;
-
-      // Resposta temporária (mock) - depois você integra com o service
       resposta.status(200).json({
         success: true,
-        data: {
-          unidadeId: unitId,
-          produtos: [
-            {
-              produtoId: '00000000-0000-4000-8000-000000000010',
-              nome: 'Baião de Dois Regional',
-              descricao: 'Prato típico com queijo coalho e bacon',
-              precoRegional: 34.90,
-              disponivel: true,
-              estoque: 50,
-            },
-          ],
-          fromCache: false,
-        },
-        correlationId: requisicao.correlationId || 'temp-id',
+        data: catalogo,
       });
     } catch (erro) {
       proximo(erro);
     }
-  }
+  };
 }
