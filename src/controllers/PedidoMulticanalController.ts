@@ -3,6 +3,66 @@ import { z } from 'zod';
 import { CriarPedidoMulticanalService } from '../services/CriarPedidoMulticanalService';
 import { AppError } from '../utils/AppError';
 
+/**
+ * @openapi
+ * /api/v1/orders:
+ *   post:
+ *     tags: [Pedidos]
+ *     summary: Criar pedido multicanal
+ *     description: |
+ *       Cria um novo pedido com idempotência via cabeçalho `idempotency-key`.
+ *       Quando `clienteId` é informado, exige consentimento LGPD vigente.
+ *     parameters:
+ *       - $ref: '#/components/parameters/IdempotencyKey'
+ *       - $ref: '#/components/parameters/CorrelationId'
+ *     security:
+ *       - bearerAuth: []
+ *       - {}
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CriarPedidoEntrada'
+ *     responses:
+ *       201:
+ *         description: Pedido criado com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/PedidoCriadoResposta'
+ *             example:
+ *               publicOrderId: RN-20260617-002
+ *               status: PENDING_PAYMENT
+ *               valorTotal: 69.8
+ *               canal: APP
+ *               unidadeId: 00000000-0000-4000-8000-000000000001
+ *       400:
+ *         description: Cabeçalho idempotency-key ausente ou payload inválido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErroApi'
+ *       403:
+ *         description: Consentimento LGPD ausente ou revogado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErroApi'
+ *       422:
+ *         description: Erro de validação Zod
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErroApi'
+ *       500:
+ *         description: Erro interno do servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErroApi'
+ */
+
 const itemPedidoSchema = z.object({
   produtoId: z.string().uuid(),
   quantidade: z.number().int().positive(),

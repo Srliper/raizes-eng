@@ -2,7 +2,7 @@
 
 API REST multicanal para a rede franqueada **Raízes do Nordeste**, desenvolvida como Projeto Multidisciplinar da disciplina **Engenharia de Software** (855885), do curso **Análise e Desenvolvimento de Sistemas** — **UNINTER**, UTA Desenvolvimento Avançado, Fase II 2026.
 
-**Aluno:** Luís Fernando Bedim — RA 4555952
+**Aluno:** Luís Fernando Bedim — RU 4555952
 
 ## Stack
 
@@ -31,6 +31,20 @@ Repositories →  Acesso a dados via Prisma
 | `DELETE` | `/api/v1/users/:clientId/anonymize` | Anonimização irreversível (JWT) |
 | `GET` | `/health` | Health check |
 | `GET` | `/ready` | Readiness (PostgreSQL + Redis) |
+
+## Documentação Swagger / OpenAPI
+
+Com o servidor em execução, a documentação interativa fica disponível em:
+
+| URL | Descrição |
+|-----|-----------|
+| [http://localhost:3210/api-docs](http://localhost:3210/api-docs) | UI Swagger (Try it out) |
+| [http://localhost:3210/docs](http://localhost:3210/docs) | Redireciona para `/api-docs` |
+| [http://localhost:3210/api-docs.json](http://localhost:3210/api-docs.json) | Especificação OpenAPI 3.0 em JSON |
+
+A spec é gerada automaticamente via `swagger-jsdoc` a partir dos blocos `@openapi` nos controllers (`src/controllers/*.ts`) e em `src/routes/saude.routes.ts`. Schemas compartilhados e autenticação Bearer JWT estão em `src/swagger.ts`.
+
+**Testar com JWT:** em desenvolvimento, gere um token em `POST /api/v1/dev/token`, clique em **Authorize** na UI e informe `Bearer <token>`.
 
 ## Pré-requisitos
 
@@ -146,4 +160,4 @@ raizes-backend/
 
 **Código-fonte:** licença [MIT](https://opensource.org/licenses/MIT) — permite uso, cópia e modificação com atribuição ao autor.
 
-**Contexto acadêmico:** projeto desenvolvido na **UNINTER**, curso **Análise e Desenvolvimento de Sistemas**, disciplina **Engenharia de Software** — aluno Luís Fernando Bedim (RA 4555952).
+**Contexto acadêmico:** projeto desenvolvido na **UNINTER**, curso **Análise e Desenvolvimento de Sistemas**, disciplina **Engenharia de Software** — aluno Luís Fernando Bedim (RU 4555952).

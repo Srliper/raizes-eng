@@ -6,6 +6,7 @@ import express, { Request, Response } from 'express';
 import cors from 'cors';
 import { middlewareCorrelationId } from './middleware/correlationId';
 import { middlewareTratamentoErros } from './middleware/tratamentoErros';
+import { middlewareSwaggerUi, configurarSwaggerUi, swaggerSpec } from './swagger';
 import { rotasSaude } from './routes/saude.routes';
 import { rotasCatalogo } from './routes/catalogo.routes';
 import { rotasPedidos } from './routes/pedidos.routes';
@@ -19,6 +20,14 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(middlewareCorrelationId);
+
+app.use('/api-docs', middlewareSwaggerUi, configurarSwaggerUi());
+app.get('/api-docs.json', (_requisicao: Request, resposta: Response) => {
+  resposta.json(swaggerSpec);
+});
+app.get('/docs', (_requisicao: Request, resposta: Response) => {
+  resposta.redirect('/api-docs');
+});
 
 app.use(rotasSaude);
 app.use('/api/v1/catalog', rotasCatalogo);
